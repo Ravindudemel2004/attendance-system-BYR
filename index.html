@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Attendance System</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Student Attendance System</h1>
+
+    <section class="card">
+      <h2>Add Student</h2>
+      <div class="row">
+        <input type="text" id="studentName" placeholder="Enter student name" />
+        <button onclick="addStudent()">Add Student</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Attendance Summary</h2>
+      <div id="summary" class="summary"></div>
+      <div class="row">
+        <button onclick="markAll('Present')">Mark All Present</button>
+        <button onclick="exportCSV()">Export CSV</button>
+        <button class="danger" onclick="clearAllData()">Clear All Data</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Student List</h2>
+      <input
+        type="text"
+        id="searchBox"
+        placeholder="Search student..."
+        oninput="renderStudents()"
+      />
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Present</th>
+              <th>Absent</th>
+              <th>Late</th>
+              <th>Total</th>
+              <th>Attendance %</th>
+              <th>Today's Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+* {
+  background: #dc2626;
+}
+
+button.present {
+  background: #16a34a;
+}
+
+button.absent {
+  background: #dc2626;
+}
+
+button.late {
+  background: #f59e0b;
+}
+
+button.delete {
+  background: #6b7280;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  margin-top: 15px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 10px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+th {
+  background: #f3f4f6;
+}
+
+.summary {
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.status {
+  font-weight: bold;
+}
+
+.status.present {
+  color: #16a34a;
+}
+
+.status.absent {
+  color: #dc2626;
+}
+
+.status.late {
+  color: #f59e0b;
+}
+
+@media (max-width: 768px) {
+  th,
+  td {
+    font-size: 12px;
+    padding: 6px;
+  }
+
+  button {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+}
