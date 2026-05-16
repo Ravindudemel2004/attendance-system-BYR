@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduTrack — Student Attendance System</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Google Fonts: Syne (display) + DM Sans (body) -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-icon">📋</span>
+    <span class="logo-text">EduTrack</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="#" class="nav-item active" data-section="dashboard">
+      <span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span>
+    </a>
+    <a href="#" class="nav-item" data-section="attendance">
+      <span class="nav-icon">✅</span><span class="nav-label">Attendance</span>
+    </a>
+    <a href="#" class="nav-item" data-section="students">
+      <span class="nav-icon">👥</span><span class="nav-label">Students</span>
+    </a>
+    <a href="#" class="nav-item" data-section="analytics">
+      <span class="nav-icon">📊</span><span class="nav-label">Analytics</span>
+    </a>
+    <a href="#" class="nav-item" data-section="reports">
+      <span class="nav-icon">📄</span><span class="nav-label">Reports</span>
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">🌙 Dark Mode</button>
+  </div>
+</aside>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="main-content">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <button class="sidebar-toggle" id="sidebarToggle" title="Toggle sidebar">☰</button>
+    <div class="topbar-title" id="topbarTitle">Dashboard</div>
+    <div class="topbar-right">
+      <span class="topbar-date" id="topbarDate"></span>
+      <button class="btn btn-outline btn-sm" id="backupBtn">⬇ Backup</button>
+      <button class="btn btn-outline btn-sm" id="restoreBtn">⬆ Restore</button>
+      <input type="file" id="restoreInput" accept=".json" style="display:none" />
+    </div>
+  </header>
+
+  <!-- ===== SECTION: DASHBOARD ===== -->
+  <section class="section active" id="section-dashboard">
+    <div class="section-header">
+      <h1>Dashboard</h1>
+      <p class="section-sub">Welcome back — here's today's overview.</p>
+    </div>
+
+    <!-- Date selector for dashboard -->
+    <div class="date-selector-bar card">
+      <label>Year
+        <select id="dash-year" class="select"></select>
+      </label>
+      <label>Month
+        <select id="dash-month" class="select"></select>
+      </label>
+      <label>Day
+        <select id="dash-day" class="select"></select>
+      </label>
+      <button class="btn btn-primary" id="dashLoadBtn">Load</button>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="stats-grid">
+      <div class="stat-card stat-total">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+          <div class="stat-value" id="statTotal">0</div>
+          <div class="stat-label">Total Students</div>
+        </div>
+      </div>
+      <div class="stat-card stat-present">
+        <div class="stat-icon">✅</div>
+        <div class="stat-info">
+          <div class="stat-value" id="statPresent">0</div>
+          <div class="stat-label">Present</div>
+        </div>
+      </div>
+      <div class="stat-card stat-absent">
+        <div class="stat-icon">❌</div>
+        <div class="stat-info">
+          <div class="stat-value" id="statAbsent">0</div>
+          <div class="stat-label">Absent</div>
+        </div>
+      </div>
+      <div class="stat-card stat-late">
+        <div class="stat-icon">⏰</div>
+        <div class="stat-info">
+          <div class="stat-value" id="statLate">0</div>
+          <div class="stat-label">Late</div>
+        </div>
+      </div>
+      <div class="stat-card stat-excused">
+        <div class="stat-icon">📝</div>
+        <div class="stat-info">
+          <div class="stat-value" id="statExcused">0</div>
+          <div class="stat-label">Excused</div>
+        </div>
+      </div>
+      <div class="stat-card stat-pct">
+        <div class="stat-icon">📈</div>
+        <div class="stat-info">
+          <div class="stat-value" id="statPct">—</div>
+          <div class="stat-label">Class Attendance %</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="charts-row">
+      <div class="card chart-card">
+        <h3>Today's Breakdown</h3>
+        <canvas id="pieChart"></canvas>
+      </div>
+      <div class="card chart-card">
+        <h3>Monthly Trend</h3>
+        <canvas id="monthlyChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Low attendance warnings -->
+    <div class="card" id="lowAttendanceCard">
+      <h3>⚠ Low Attendance Warnings <span class="badge badge-warning" id="lowCount">0</span></h3>
+      <div id="lowAttendanceList"><p class="empty-msg">No low attendance detected.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION: ATTENDANCE ===== -->
+  <section class="section" id="section-attendance">
+    <div class="section-header">
+      <h1>Mark Attendance</h1>
+      <p class="section-sub">Select a date and mark each student's status.</p>
+    </div>
+
+    <div class="card">
+      <!-- Date controls -->
+      <div class="date-selector-bar">
+        <label>Year
+          <select id="att-year" class="select"></select>
+        </label>
+        <label>Month
+          <select id="att-month" class="select"></select>
+        </label>
+        <label>Day
+          <select id="att-day" class="select"></select>
+        </label>
+        <button class="btn btn-primary" id="attLoadBtn">Load Date</button>
+      </div>
+
+      <!-- Bulk actions -->
+      <div class="bulk-actions">
+        <span class="bulk-label">Mark All:</span>
+        <button class="btn btn-sm status-btn present" data-status="Present">✅ Present</button>
+        <button class="btn btn-sm status-btn absent" data-status="Absent">❌ Absent</button>
+        <button class="btn btn-sm status-btn late" data-status="Late">⏰ Late</button>
+        <button class="btn btn-sm status-btn excused" data-status="Excused">📝 Excused</button>
+        <button class="btn btn-sm btn-danger" id="resetDayBtn">🔄 Reset Day</button>
+        <button class="btn btn-sm btn-success" id="saveDayBtn">💾 Save</button>
+      </div>
+
+      <div class="search-bar">
+        <input type="text" id="attSearch" class="input" placeholder="🔍 Search student..." />
+        <span id="attDateLabel" class="date-label-badge"></span>
+      </div>
+
+      <!-- Attendance table -->
+      <div class="table-wrap">
+        <table class="att-table" id="attTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Student Name</th>
+              <th>Present</th>
+              <th>Absent</th>
+              <th>Late</th>
+              <th>Excused</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="attTableBody">
+            <tr><td colspan="7" class="empty-msg">No students found. Add students first.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION: STUDENTS ===== -->
+  <section class="section" id="section-students">
+    <div class="section-header">
+      <h1>Student Management</h1>
+      <p class="section-sub">Add, edit, or remove students from the roster.</p>
+    </div>
+
+    <div class="card">
+      <!-- Add student form -->
+      <div class="add-student-bar">
+        <input type="text" id="newStudentName" class="input" placeholder="Enter student name..." />
+        <button class="btn btn-primary" id="addStudentBtn">+ Add Student</button>
+        <button class="btn btn-outline" id="importCSVBtn">📂 Import CSV</button>
+        <input type="file" id="csvInput" accept=".csv" style="display:none" />
+        <button class="btn btn-outline" id="exportStudentsBtn">⬇ Export CSV</button>
+      </div>
+
+      <div class="search-bar">
+        <input type="text" id="studentSearch" class="input" placeholder="🔍 Search students..." />
+        <span class="student-count-badge" id="studentCountBadge">0 students</span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="att-table" id="studentTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Student Name</th>
+              <th>Total Days</th>
+              <th>Attendance %</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentTableBody">
+            <tr><td colspan="5" class="empty-msg">No students added yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Student ranking -->
+    <div class="card">
+      <h3>🏆 Student Ranking by Attendance</h3>
+      <div id="rankingList"></div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION: ANALYTICS ===== -->
+  <section class="section" id="section-analytics">
+    <div class="section-header">
+      <h1>Analytics</h1>
+      <p class="section-sub">Deep-dive into attendance trends and individual performance.</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="card filter-bar">
+      <label>Year
+        <select id="ana-year" class="select"></select>
+      </label>
+      <label>Month
+        <select id="ana-month" class="select">
+          <option value="all">All Months</option>
+        </select>
+      </label>
+      <label>Student
+        <select id="ana-student" class="select">
+          <option value="all">All Students</option>
+        </select>
+      </label>
+      <button class="btn btn-primary" id="anaFilterBtn">Apply Filter</button>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+      <div class="card chart-card">
+        <h3>Yearly Performance</h3>
+        <canvas id="yearlyChart"></canvas>
+      </div>
+      <div class="card chart-card">
+        <h3>Student Comparison</h3>
+        <canvas id="comparisonChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Per-student analytics table -->
+    <div class="card">
+      <h3>Individual Student Report</h3>
+      <div class="table-wrap">
+        <table class="att-table" id="anaTable">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Present</th>
+              <th>Absent</th>
+              <th>Late</th>
+              <th>Excused</th>
+              <th>Total Days</th>
+              <th>% Attendance</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="anaTableBody">
+            <tr><td colspan="8" class="empty-msg">Select filters and click Apply.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SECTION: REPORTS ===== -->
+  <section class="section" id="section-reports">
+    <div class="section-header">
+      <h1>Reports & Export</h1>
+      <p class="section-sub">Export attendance data in various formats.</p>
+    </div>
+
+    <div class="reports-grid">
+      <div class="card report-card">
+        <div class="report-icon">📅</div>
+        <h3>Daily Report</h3>
+        <p>Export attendance for a specific date.</p>
+        <div class="report-controls">
+          <label>Year <select id="rep-year-d" class="select"></select></label>
+          <label>Month <select id="rep-month-d" class="select"></select></label>
+          <label>Day <select id="rep-day-d" class="select"></select></label>
+        </div>
+        <button class="btn btn-primary" id="exportDailyBtn">⬇ Export Daily CSV</button>
+      </div>
+
+      <div class="card report-card">
+        <div class="report-icon">📆</div>
+        <h3>Monthly Report</h3>
+        <p>Export all attendance for a selected month.</p>
+        <div class="report-controls">
+          <label>Year <select id="rep-year-m" class="select"></select></label>
+          <label>Month <select id="rep-month-m" class="select"></select></label>
+        </div>
+        <button class="btn btn-primary" id="exportMonthlyBtn">⬇ Export Monthly CSV</button>
+      </div>
+
+      <div class="card report-card">
+        <div class="report-icon">🗓</div>
+        <h3>Yearly Report</h3>
+        <p>Export full-year attendance summary.</p>
+        <div class="report-controls">
+          <label>Year <select id="rep-year-y" class="select"></select></label>
+        </div>
+        <button class="btn btn-primary" id="exportYearlyBtn">⬇ Export Yearly CSV</button>
+      </div>
+
+      <div class="card report-card">
+        <div class="report-icon">🗂</div>
+        <h3>All Data Export</h3>
+        <p>Export the complete attendance database.</p>
+        <button class="btn btn-primary" id="exportAllBtn">⬇ Export All CSV</button>
+      </div>
+
+      <div class="card report-card">
+        <div class="report-icon">🖨</div>
+        <h3>Print Report</h3>
+        <p>Print current analytics view.</p>
+        <button class="btn btn-outline" id="printBtn">🖨 Print</button>
+      </div>
+
+      <div class="card report-card danger-card">
+        <div class="report-icon">🗑</div>
+        <h3>Clear All Data</h3>
+        <p>Permanently remove all attendance records.</p>
+        <button class="btn btn-danger" id="clearAllBtn">⚠ Clear All Data</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===== MODAL: Edit Student ===== -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Edit Student Name</h3>
+      <button class="modal-close" id="editModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="text" id="editStudentName" class="input" placeholder="New name..." />
+      <input type="hidden" id="editStudentId" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="editModalCancel">Cancel</button>
+      <button class="btn btn-primary" id="editModalSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
